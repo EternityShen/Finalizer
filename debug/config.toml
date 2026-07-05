@@ -1,0 +1,111 @@
+[name]
+name = "8100_MAX"
+version = "1.0"
+author = "ShenEternity"
+
+[[policy]]
+from = 0
+to = 3
+
+[[policy]]
+from = 4
+to = 6
+
+[[policy]]
+from = 7
+to = 7
+
+[mode]
+[mode.power]
+[[mode.power.policy]]
+delay = 600
+max_freq = 2000000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+
+[[mode.power.policy]]
+delay = 600
+max_freq = 2850000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+
+[[mode.power.policy]]
+delay = 600
+max_freq = 2850000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+
+
+
+[mode.blan]
+[[mode.blan.policy]]
+delay = 400
+max_freq = 2000000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+
+[[mode.blan.policy]]
+delay = 400
+max_freq = 2850000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+
+[[mode.blan.policy]]
+delay = 400
+max_freq = 2850000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+
+
+[mode.perf]
+[[mode.perf.policy]]
+delay = 200
+max_freq = 2000000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+
+[[mode.perf.policy]]
+delay = 200
+max_freq = 2850000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+
+[[mode.perf.policy]]
+delay = 200
+max_freq = 2850000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+
+
+
+[mode.fast]
+[[mode.fast.policy]]
+delay = 100
+max_freq = 2000000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+
+[[mode.fast.policy]]
+delay = 100
+max_freq = 2850000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+
+[[mode.fast.policy]]
+delay = 100
+max_freq = 2850000
+min_freq = 500000
+boost_freq = 2000000
+margin = 1.25
+

@@ -1,0 +1,12 @@
+[package]
+name = "finalizer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+logger = {path = "/home/eternity/Work/Rust/lib/logger/"}
+serde = { version = "1.0", features = ["derive"] }
+toml = "1.1.2"
+libc = { version = "0.2.177"}
+nix = { version = "0.31.3", features = ["fs", "poll"] }
+evdev = "0.13.2"
