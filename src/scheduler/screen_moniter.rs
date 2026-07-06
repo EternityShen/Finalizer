@@ -179,8 +179,8 @@ impl Moniter {
                     }
                 }
                 status_temp = screen_status;
-                std::thread::sleep(Duration::from_secs(5));
             }
+            std::thread::sleep(Duration::from_secs(5));
         }
     }
 }
