@@ -1,20 +1,13 @@
 [name]
-name = "8100_MAX"
-version = "1.0"
-author = "ShenEternity"
+name = "8100_MAX" // 配置名
+version = "2.0" // 配置版本
+author = "ShenEternity" // 配置作者
 
 [[policy]] // 一个列表 [[policy]] 为一个值 数量与policy数量挂钩
 from = 0 // cpu_id 第一个
 to = 3 // cpu_id 最后一个
 // 程序会自动增加中间的 1 2
 
-[[policy]]
-from = 4
-to = 6
-
-[[policy]]
-from = 7
-to = 7
 
 [mode] // 模式的集合
 [mode.power] // 一个模式
@@ -23,119 +16,9 @@ idle_governor = "menu" // idle_governor 不知道就默认
 delay = 600 // 轮训延迟
 max_freq = 2000000 // 当前 policy 的最高频率
 min_freq = 500000 // 当前 policy 的最低频率
+can_boost_freq = 1000000 //允许boost的频率 当频率地狱这个值时允许boost
 boost_freq = 2000000 // boost 频率
 margin = 1.25 // 冗余倍率,越高调频越激进,低则相反,最高优先级
 diff = 70000 // 调频的差值 当前频率 与 计算出的频率 的差值高于这个值才会调频
-governor = "sugov_ext"
-
-[[mode.power.policy]]
-delay = 600
-max_freq = 2850000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
-governor = "sugov_ext"
-
-
-[[mode.power.policy]]
-delay = 600
-max_freq = 2850000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
-governor = "sugov_ext"
-
-
-
-[mode.blan]
-idle_governor = "menu"
-[[mode.blan.policy]]
-delay = 400
-max_freq = 2000000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
-governor = "sugov_ext"
-
-[[mode.blan.policy]]
-delay = 400
-max_freq = 2850000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
-governor = "sugov_ext"
-
-[[mode.blan.policy]]
-delay = 400
-max_freq = 2850000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
-governor = "sugov_ext"
-
-
-[mode.perf]
-idle_governor = "menu"
-[[mode.perf.policy]]
-delay = 200
-max_freq = 2000000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
-governor = "sugov_ext"
-
-[[mode.perf.policy]]
-delay = 200
-max_freq = 2850000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
-governor = "sugov_ext"
-
-[[mode.perf.policy]]
-delay = 200
-max_freq = 2850000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
-governor = "sugov_ext"
-
-
-
-[mode.fast]
-idle_governor = "menu"
-[[mode.fast.policy]]
-delay = 100
-max_freq = 2000000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
-governor = "sugov_ext"
-
-[[mode.fast.policy]]
-delay = 100
-max_freq = 2850000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
-governor = "sugov_ext"
-
-[[mode.fast.policy]]
-delay = 100
-max_freq = 2850000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
-governor = "sugov_ext"
-
+governor = "sugov_ext" // 调速器
+sleep_freq = 1000000 //熄屏时的频率

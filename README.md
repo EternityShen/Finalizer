@@ -11,6 +11,7 @@ Finalizer 是一个用 Rust 编写的轻量守护进程/工具，面向 Android 
 - 动态调节CPU频率
 - manager管理事件
 - 运行时调整模式
+- 熄屏停止大部分工作
 
 
 贡献
@@ -35,7 +36,7 @@ Finalizer 是一个用 Rust 编写的轻量守护进程/工具，面向 Android 
 下面基于 `debug/config_bak.toml` 示例，列出常用字段及注释：
 
 - `name.name`：配置名称（示例：`8100_MAX`）。
-- `name.version`：配置版本（示例：`1.0`）。
+- `name.version`：配置版本（示例：`2.0`）。
 - `name.author`：配置作者（示例：`ShenEternity`）。
 
 - `[[policy]]`：CPU 分组策略列表；每个 `[[policy]]` 表示一组 CPU id 范围，列表项数量决定分组数量。
@@ -43,17 +44,18 @@ Finalizer 是一个用 Rust 编写的轻量守护进程/工具，面向 Android 
 	- `to`：该分组结束 CPU id（示例：`3`），表示此策略适用于到该 id 为止的 CPU。 注释: "cpu_id 最后一个"。程序会自动补充中间的 CPU id。
 
 - `[mode]`：模式集合顶层表，包含不同运行模式（例如 `power`、`blan`、`perf`、`fast`）。
-- `mode.<name>.idle_governor`：空闲时使用的 governor 名称（示例：`menu`）。注释提示：如果不确定可使用默认值。
-- `mode.<name>.policy`：某一模式下的策略列表；每个策略字段含义如下：
+- `mode.<mode_name>.idle_governor`：空闲时使用的 governor 名称（示例：`menu`）。注释提示：如果不确定可使用默认值。
+- `mode.<mode_name>.policy`：某一模式下的策略列表；每个策略字段含义如下：
 	- `delay`：轮询延迟（单位：毫秒），控制采样/调节的间隔。 注释: "轮训延迟"。
 	- `max_freq`：该策略允许的最高频率（单位：Hz）。 注释: "当前 policy 的最高频率"。
 	- `min_freq`：该策略允许的最低频率（单位：Hz）。 注释: "当前 policy 的最低频率"。
+	- `can_boost_freq`：允许 boost 的最低频率阈值（单位：Hz）；当当前频率低于此值时才允许进入 boost 状态。 注释: "允许boost的频率 当频率地狱这个值时允许boost"。
 	- `boost_freq`：突发/boost 时使用的频率（单位：Hz）。 注释: "boost 频率"。
 	- `margin`：冗余倍率（浮点），越高表示调频越激进，优先级更高。 注释: "冗余倍率,越高调频越激进,低则相反,最高优先级"。
 	- `diff`：触发调频的阈值（单位：Hz）；当当前频率与计算出的目标频率差值大于此值时才会执行调频。 注释: "调频的差值 当前频率 与 计算出的频率 的差值高于这个值才会调频"。
-	- `governor`：为该策略选择的 governor（示例：`sugov_ext`）。
+	- `governor`：为该策略选择的 governor（示例：`sugov_ext`）。 注释: "调速器"。
+	- `sleep_freq`：熄屏/休眠状态时的目标频率（单位：Hz）。 注释: "熄屏时的频率"。
 
-示例中不同模式的 `delay` 值依次为：`power`=600、`blan`=400、`perf`=200、`fast`=100（单位：毫秒），用于控制各模式下响应速度与功耗策略的平衡。
-
+示例中不同模式的 `delay` 值依次为：`power`=600，其他模式可设更小值以获得更快响应。
 有关完整示例，请参阅仓库内的 `debug/config_bak.toml` 示例配置。
 
