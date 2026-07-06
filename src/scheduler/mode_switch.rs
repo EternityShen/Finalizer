@@ -58,7 +58,7 @@ impl ModeSwitch {
                 "powersave" => {
                     self.mode.store(0, std::sync::atomic::Ordering::Relaxed);
                     if let Ok(mut log) = self.logger_handle.lock() {
-                        log.info(format!("Mode From:{} --> {}", mode_temp, mode));
+                        log.info(format!("Mode From:{} --> {}", mode_temp, mode.trim()));
                     }
                     let config = self.config.mode.power.policy.clone();
                     let id_config = self.config.policy.clone();
@@ -93,7 +93,7 @@ impl ModeSwitch {
                 "balance" => {
                     self.mode.store(1, std::sync::atomic::Ordering::Relaxed);
                     if let Ok(mut log) = self.logger_handle.lock() {
-                        log.info(format!("Mode From:{} --> {}", mode_temp, mode));
+                        log.info(format!("Mode From:{} --> {}", mode_temp, mode.trim()));
                     }
                     let config = self.config.mode.blan.policy.clone();
                     let id_config = self.config.policy.clone();
@@ -127,7 +127,7 @@ impl ModeSwitch {
                 "performance" => {
                     self.mode.store(2, std::sync::atomic::Ordering::Relaxed);
                     if let Ok(mut log) = self.logger_handle.lock() {
-                        log.info(format!("Mode From:{} --> {}", mode_temp, mode));
+                        log.info(format!("Mode From:{} --> {}", mode_temp, mode.trim()));
                     }
                     let config = self.config.mode.perf.policy.clone();
                     let id_config = self.config.policy.clone();
@@ -161,7 +161,7 @@ impl ModeSwitch {
                 "fast" => {
                     self.mode.store(3, std::sync::atomic::Ordering::Relaxed);
                     if let Ok(mut log) = self.logger_handle.lock() {
-                        log.info(format!("Mode From:{} --> {}", mode_temp, mode));
+                        log.info(format!("Mode From:{} --> {}", mode_temp, mode.trim()));
                     }
                     let config = self.config.mode.perf.policy.clone();
                     let id_config = self.config.policy.clone();

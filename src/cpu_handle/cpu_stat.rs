@@ -3,7 +3,7 @@ use std::{
     io::Read,
     sync::{
         Arc, Mutex,
-        atomic::AtomicUsize,
+        atomic::{AtomicBool, AtomicUsize},
         mpsc::{self},
     },
     time::Duration,
@@ -26,6 +26,7 @@ pub struct CpuStat<'a> {
     logger_handle: Arc<Mutex<logger::Logger>>,
     policy_freq: cpu_freq::Policy,
     mode: Arc<AtomicUsize>,
+    onf: Arc<AtomicBool>,
     config: Mode,
 }
 
@@ -38,6 +39,7 @@ impl<'a> CpuStat<'a> {
         logger_handle: Arc<Mutex<logger::Logger>>,
         config: data::Config,
         mode: Arc<AtomicUsize>,
+        onf: Arc<AtomicBool>,
     ) -> Self {
         let num_cpus = if to >= from {
             (to - from + 1) as usize
@@ -59,6 +61,7 @@ impl<'a> CpuStat<'a> {
             logger_handle,
             policy_freq: freq_handle,
             mode,
+            onf,
             config: config.mode,
         }
     }
@@ -142,21 +145,6 @@ impl<'a> CpuStat<'a> {
 
     pub fn start_send_event_loop(&mut self) {
         loop {
-            // 获取当前 CPU 负载
-            let load: f32 = (self.get_cpu_load() as f32) / 100.0_f32;
-            // println!("load:{}", load);
-
-            // 读取当前系统的硬件最大作为算法基准
-            let hardware_max_freq = match self.policy_freq.read_max() {
-                Ok(freq) => freq as f32,
-                Err(e) => {
-                    if let Ok(mut log) = self.logger_handle.lock() {
-                        log.error(format!("读取max_freq失败 错误:{}", e));
-                    }
-                    200000.0 // 降级默认值值
-                }
-            };
-
             // 根据 config_id 匹配对应的策略配置，避免代码复用
             let config_id = self.mode.load(std::sync::atomic::Ordering::Relaxed);
 
@@ -209,8 +197,26 @@ impl<'a> CpuStat<'a> {
                 }
             };
 
-            // 执行调频窗口等待
             std::thread::sleep(Duration::from_millis(delay));
+
+            if !self.onf.load(std::sync::atomic::Ordering::Relaxed) {
+                continue;
+            }
+
+            // 获取当前 CPU 负载
+            let load: f32 = (self.get_cpu_load() as f32) / 100.0_f32;
+            // println!("load:{}", load);
+
+            // 读取当前系统的硬件最大作为算法基准
+            let hardware_max_freq = match self.policy_freq.read_max() {
+                Ok(freq) => freq as f32,
+                Err(e) => {
+                    if let Ok(mut log) = self.logger_handle.lock() {
+                        log.error(format!("读取max_freq失败 错误:{}", e));
+                    }
+                    200000.0 // 降级默认值值
+                }
+            };
 
             //核心 DVFS 调频算法
             // 目标频率 = 硬件最大频率 * 当前负载 * 放大系数

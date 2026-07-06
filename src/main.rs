@@ -1,10 +1,14 @@
-use std::sync::{Arc, Mutex, atomic::AtomicUsize, mpsc};
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicBool, AtomicUsize},
+    mpsc,
+};
 
 use finalizer::{
     config::data,
     cpu_handle::cpu_stat::CpuStat,
     devices::{self, touch},
-    scheduler::{manager, mode_switch},
+    scheduler::{manager, mode_switch, screen_moniter},
 };
 
 fn main() {
@@ -20,12 +24,14 @@ fn main() {
     let logger_handle = Arc::new(Mutex::new(log));
 
     let mode = Arc::new(AtomicUsize::new(0));
+    let onf = Arc::new(AtomicBool::new(true));
 
     for (id, i) in config.clone().policy.into_iter().enumerate() {
         let tx_clone = tx.clone();
         let log_clone: Arc<Mutex<logger::Logger>> = logger_handle.clone();
         let config_clone = config.clone();
         let mode_clone = mode.clone();
+        let onf_clone = onf.clone();
         let _ = std::thread::Builder::new()
             .name("listen_1".to_string())
             .spawn(move || {
@@ -37,6 +43,7 @@ fn main() {
                     log_clone,
                     config_clone,
                     mode_clone,
+                    onf_clone,
                 );
                 stat.start_send_event_loop();
             });
@@ -70,6 +77,20 @@ fn main() {
         .name("mode_switch".to_string())
         .spawn(move || {
             mode_switch.start_loop();
+        });
+
+    let mut screen_moniter = screen_moniter::Moniter::new(
+        onf.clone(),
+        logger_handle.clone(),
+        mode.clone(),
+        config.clone(),
+        tx.clone(),
+    );
+
+    let _ = std::thread::Builder::new()
+        .name("screen_moniter".to_string())
+        .spawn(move || {
+            screen_moniter.start_loop();
         });
 
     let mut manager = manager::Manager::new(rx, logger_handle, config);

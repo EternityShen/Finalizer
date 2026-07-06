@@ -111,28 +111,110 @@ impl Moniter {
         loop {
             // 只有当 touch_monitor 确实排查到了触摸事件，才执行 Boost 逻辑
             if self.touch_monitor() {
-                for i in self.config.policy.clone() {
+                for (u, i) in self.config.policy.clone().iter().enumerate() {
                     let result = self.cpu_freq_handle.policys.get_mut(&(i.from as u8));
                     if let Some(p) = result {
                         let result = p.read_max();
                         match result {
                             Ok(freq) => {
-                                if freq < 1200000 {
-                                    let result = self
-                                        .tx
-                                        .send(Event::Boost((i.from as u8, (2000000, 2000000))));
+                                match self.mode.load(std::sync::atomic::Ordering::Relaxed) {
+                                    0 => {
+                                        let l = self.config.mode.power.policy[u].clone();
+                                        if freq < l.can_boost_freq {
+                                            let result = self.tx.send(Event::Boost((
+                                                i.from as u8,
+                                                (l.boost_freq, l.boost_freq),
+                                            )));
 
-                                    match result {
-                                        Ok(_) => {
-                                            // println!("Touch");
-                                        }
-                                        Err(e) => {
-                                            if let Ok(mut log) = self.logger_handle.lock() {
-                                                log.warn(format!("无法发送Boost事件 错误:{}", e));
-                                                continue;
+                                            match result {
+                                                Ok(_) => {
+                                                    // println!("Touch");
+                                                }
+                                                Err(e) => {
+                                                    if let Ok(mut log) = self.logger_handle.lock() {
+                                                        log.warn(format!(
+                                                            "无法发送Boost事件 错误:{}",
+                                                            e
+                                                        ));
+                                                        continue;
+                                                    }
+                                                }
                                             }
                                         }
                                     }
+                                    1 => {
+                                        let l = self.config.mode.blan.policy[u].clone();
+                                        if freq < l.can_boost_freq {
+                                            let result = self.tx.send(Event::Boost((
+                                                i.from as u8,
+                                                (l.boost_freq, l.boost_freq),
+                                            )));
+
+                                            match result {
+                                                Ok(_) => {
+                                                    // println!("Touch");
+                                                }
+                                                Err(e) => {
+                                                    if let Ok(mut log) = self.logger_handle.lock() {
+                                                        log.warn(format!(
+                                                            "无法发送Boost事件 错误:{}",
+                                                            e
+                                                        ));
+                                                        continue;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    2 => {
+                                        let l = self.config.mode.perf.policy[u].clone();
+                                        if freq < l.can_boost_freq {
+                                            let result = self.tx.send(Event::Boost((
+                                                i.from as u8,
+                                                (l.boost_freq, l.boost_freq),
+                                            )));
+
+                                            match result {
+                                                Ok(_) => {
+                                                    // println!("Touch");
+                                                }
+                                                Err(e) => {
+                                                    if let Ok(mut log) = self.logger_handle.lock() {
+                                                        log.warn(format!(
+                                                            "无法发送Boost事件 错误:{}",
+                                                            e
+                                                        ));
+                                                        continue;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    3 => {
+                                        let l = self.config.mode.fast.policy[u].clone();
+                                        if freq < l.can_boost_freq {
+                                            let result = self.tx.send(Event::Boost((
+                                                i.from as u8,
+                                                (l.boost_freq, l.boost_freq),
+                                            )));
+
+                                            match result {
+                                                Ok(_) => {
+                                                    // println!("Touch");
+                                                }
+                                                Err(e) => {
+                                                    if let Ok(mut log) = self.logger_handle.lock() {
+                                                        log.warn(format!(
+                                                            "无法发送Boost事件 错误:{}",
+                                                            e
+                                                        ));
+                                                        continue;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    _ => {}
                                 }
                             }
                             Err(e) => {

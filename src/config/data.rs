@@ -57,10 +57,12 @@ pub struct MPolicy {
     pub delay: u64,
     pub max_freq: u32,
     pub min_freq: u32,
+    pub can_boost_freq: u32,
     pub boost_freq: u32,
     pub margin: f32,
     pub diff: u32,
     pub governor: String,
+    pub sleep_freq: u32,
 }
 
 #[test]

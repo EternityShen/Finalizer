@@ -1,5 +1,6 @@
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
+use std::process::Command;
 
 pub fn set_file_permissions_numeric(file_path: &str, mode: u32) -> Result<(), std::io::Error> {
     // 获取文件的元数据
@@ -44,4 +45,14 @@ pub fn inotify_blockage(inotify: &mut inotify::Inotify) {
             }
         }
     }
+}
+
+pub fn monitor_screen_status() -> bool {
+    let result = Command::new("sh")
+        .arg("-c")
+        .arg("dumpsys power | grep -E \"mHoldingDisplaySuspendBlocker|mScreenOn\"")
+        .output()
+        .expect("Failed to execute command");
+    let output = String::from_utf8_lossy(&result.stdout);
+    output.contains("true")
 }
