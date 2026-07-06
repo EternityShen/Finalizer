@@ -10,3 +10,4 @@ toml = "1.1.2"
 libc = { version = "0.2.177"}
 nix = { version = "0.31.3", features = ["fs", "poll"] }
 evdev = "0.13.2"
+inotify = "0.11.0"

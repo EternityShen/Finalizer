@@ -3,9 +3,10 @@ name = "8100_MAX"
 version = "1.0"
 author = "ShenEternity"
 
-[[policy]]
-from = 0
-to = 3
+[[policy]] // 一个列表 [[policy]] 为一个值 数量与policy数量挂钩
+from = 0 // cpu_id 第一个
+to = 3 // cpu_id 最后一个
+// 程序会自动增加中间的 1 2
 
 [[policy]]
 from = 4
@@ -15,16 +16,16 @@ to = 6
 from = 7
 to = 7
 
-[mode]
-[mode.power]
-idle_governor = "menu"
-[[mode.power.policy]]
-delay = 600
-max_freq = 2000000
-min_freq = 500000
-boost_freq = 2000000
-margin = 1.25
-diff = 70000
+[mode] // 模式的集合
+[mode.power] // 一个模式
+idle_governor = "menu" // idle_governor 不知道就默认
+[[mode.power.policy]]  // 一个列表 [[mode.power.policyy]] 为一个值 数量与policy数量挂钩
+delay = 600 // 轮训延迟
+max_freq = 2000000 // 当前 policy 的最高频率
+min_freq = 500000 // 当前 policy 的最低频率
+boost_freq = 2000000 // boost 频率
+margin = 1.25 // 冗余倍率,越高调频越激进,低则相反,最高优先级
+diff = 70000 // 调频的差值 当前频率 与 计算出的频率 的差值高于这个值才会调频
 governor = "sugov_ext"
 
 [[mode.power.policy]]

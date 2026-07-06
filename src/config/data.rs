@@ -30,21 +30,25 @@ pub struct Mode {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Power {
+    pub idle_governor: String,
     pub policy: Vec<MPolicy>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Blan {
+    pub idle_governor: String,
     pub policy: Vec<MPolicy>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Perf {
+    pub idle_governor: String,
     pub policy: Vec<MPolicy>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Fast {
+    pub idle_governor: String,
     pub policy: Vec<MPolicy>,
 }
 
@@ -55,6 +59,8 @@ pub struct MPolicy {
     pub min_freq: u32,
     pub boost_freq: u32,
     pub margin: f32,
+    pub diff: u32,
+    pub governor: String,
 }
 
 #[test]

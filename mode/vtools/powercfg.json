@@ -1,0 +1,14 @@
+{
+    "name": "SZE_FINALIZER",
+    "author": "ShenEternity",
+    "version": "1.0-release",
+    "versionCode": 20260706,
+    "features": {
+        "strict": false,
+        "pedestal": false
+    },
+    "module": "SZE_FINALIZER",
+    "state": "/data/adb/modules/SZE_FINALIZER/config/config.txt",
+    "entry": "/data/powercfg.sh",
+    "projectUrl": "https://github.com/EternityShen"
+}

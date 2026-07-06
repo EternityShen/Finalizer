@@ -6,7 +6,10 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use crate::config::data::{self};
+use crate::{
+    config::data::{self},
+    utils,
+};
 
 pub struct CpuFreq {
     pub policys: HashMap<u8, Policy>,
@@ -16,6 +19,24 @@ pub struct CpuFreq {
 
 impl CpuFreq {
     pub fn new(config: data::Config, logger_handle: Arc<Mutex<logger::Logger>>) -> Self {
+        let result = utils::set_file_permissions_numeric(
+            "/sys/devices/system/cpu/cpuidle/current_governor",
+            0o666,
+        );
+
+        match result {
+            Ok(_) => {}
+            Err(e) => {
+                if let Ok(mut log) = logger_handle.lock() {
+                    log.error(format!(
+                        "无法修改文件权限:/sys/devices/system/cpu/cpuidle/current_governor 错误:{}",
+                        e
+                    ));
+                }
+                panic!()
+            }
+        }
+
         let result = OpenOptions::new()
             .write(true)
             .open("/sys/devices/system/cpu/cpuidle/current_governor");
@@ -112,6 +133,42 @@ impl Policy {
             "/sys/devices/system/cpu/cpufreq/policy{}/scaling_governor",
             index
         );
+
+        let result = utils::set_file_permissions_numeric(max_path.as_str(), 0o666);
+
+        match result {
+            Ok(_) => {}
+            Err(e) => {
+                if let Ok(mut log) = logger_handle.lock() {
+                    log.error(format!("无法修改文件权限:{} 错误:{}", max_path, e));
+                }
+                panic!()
+            }
+        }
+
+        let result = utils::set_file_permissions_numeric(min_path.as_str(), 0o666);
+
+        match result {
+            Ok(_) => {}
+            Err(e) => {
+                if let Ok(mut log) = logger_handle.lock() {
+                    log.error(format!("无法修改文件权限:{} 错误:{}", min_path, e));
+                }
+                panic!()
+            }
+        }
+
+        let result = utils::set_file_permissions_numeric(governor_path.as_str(), 0o666);
+
+        match result {
+            Ok(_) => {}
+            Err(e) => {
+                if let Ok(mut log) = logger_handle.lock() {
+                    log.error(format!("无法修改文件权限:{} 错误:{}", governor_path, e));
+                }
+                panic!()
+            }
+        }
 
         let result = OpenOptions::new().read(true).write(true).open(&max_path);
         let max_file = match result {

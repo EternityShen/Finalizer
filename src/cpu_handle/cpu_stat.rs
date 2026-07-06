@@ -25,7 +25,7 @@ pub struct CpuStat<'a> {
     tx: mpsc::Sender<Event>,
     logger_handle: Arc<Mutex<logger::Logger>>,
     policy_freq: cpu_freq::Policy,
-    config_id: AtomicUsize,
+    mode: Arc<AtomicUsize>,
     config: Mode,
 }
 
@@ -37,6 +37,7 @@ impl<'a> CpuStat<'a> {
         tx: mpsc::Sender<Event>,
         logger_handle: Arc<Mutex<logger::Logger>>,
         config: data::Config,
+        mode: Arc<AtomicUsize>,
     ) -> Self {
         let num_cpus = if to >= from {
             (to - from + 1) as usize
@@ -57,7 +58,7 @@ impl<'a> CpuStat<'a> {
             tx,
             logger_handle,
             policy_freq: freq_handle,
-            config_id: AtomicUsize::new(0),
+            mode,
             config: config.mode,
         }
     }
@@ -141,11 +142,11 @@ impl<'a> CpuStat<'a> {
 
     pub fn start_send_event_loop(&mut self) {
         loop {
-            // 1. 获取当前 CPU 负载
+            // 获取当前 CPU 负载
             let load: f32 = (self.get_cpu_load() as f32) / 100.0_f32;
-            println!("load:{}", load);
+            // println!("load:{}", load);
 
-            // 2. 读取当前系统的硬件最大/最小频率作为算法基准
+            // 读取当前系统的硬件最大作为算法基准
             let hardware_max_freq = match self.policy_freq.read_max() {
                 Ok(freq) => freq as f32,
                 Err(e) => {
@@ -156,56 +157,87 @@ impl<'a> CpuStat<'a> {
                 }
             };
 
-            // 3. 根据 config_id 匹配对应的策略配置，避免代码复用
-            let config_id = self.config_id.load(std::sync::atomic::Ordering::Relaxed);
+            // 根据 config_id 匹配对应的策略配置，避免代码复用
+            let config_id = self.mode.load(std::sync::atomic::Ordering::Relaxed);
 
             // 动态提取出当前模式下的具体配置项
-            let (delay, min_limit, max_limit, margin) = match config_id {
+            let (delay, min_limit, max_limit, margin, diff) = match config_id {
                 0 => {
                     let p = &self.config.power.policy[self.policy_id];
-                    (p.delay, p.min_freq as f32, p.max_freq as f32, p.margin)
+
+                    (
+                        p.delay,
+                        p.min_freq as f32,
+                        p.max_freq as f32,
+                        p.margin,
+                        p.diff,
+                    )
                 }
                 1 => {
                     let p = &self.config.blan.policy[self.policy_id];
-                    (p.delay, p.min_freq as f32, p.max_freq as f32, p.margin)
+                    (
+                        p.delay,
+                        p.min_freq as f32,
+                        p.max_freq as f32,
+                        p.margin,
+                        p.diff,
+                    )
                 }
                 2 => {
                     let p = &self.config.perf.policy[self.policy_id];
-                    (p.delay, p.min_freq as f32, p.max_freq as f32, p.margin)
+                    (
+                        p.delay,
+                        p.min_freq as f32,
+                        p.max_freq as f32,
+                        p.margin,
+                        p.diff,
+                    )
                 }
                 3 => {
                     let p = &self.config.fast.policy[self.policy_id];
-                    (p.delay, p.min_freq as f32, p.max_freq as f32, p.margin)
+                    (
+                        p.delay,
+                        p.min_freq as f32,
+                        p.max_freq as f32,
+                        p.margin,
+                        p.diff,
+                    )
                 }
                 _ => {
                     // 未知模式降级
-                    (100, 200000.0, 200000.0, 1.0)
+                    (100, 200000.0, 200000.0, 1.0, 700000)
                 }
             };
 
-            // 4. 执行调频窗口等待
+            // 执行调频窗口等待
             std::thread::sleep(Duration::from_millis(delay));
 
-            // 5. 核心 DVFS 调频算法
+            //核心 DVFS 调频算法
             // 目标频率 = 硬件最大频率 * 当前负载 * 放大系数
             let mut target_freq = hardware_max_freq * load * margin;
 
             // 将目标频率限制在当前模式配置文件所允许的 [min_limit, max_limit] 区间内
             target_freq = target_freq.clamp(min_limit, max_limit);
 
-            // 6. 设定下发给系统的参数
+            // 设定下发给系统的参数
             // 通常 max 设为算出来的目标频率，min 设为配置下限（允许系统在无负载时自行降频）
             // 如果你的目的是“锁死频率”，则可以将 target_min 也设为 target_freq
             let target_max = target_freq as u32;
             let target_min = min_limit as u32;
 
-            if config_id == 0 {
-                println!("{}:{}", target_min, target_max);
+            // 计算freq差值
+            let diff_freq = target_max.abs_diff(hardware_max_freq as u32);
+
+            // 差值太低,不管它
+            if diff_freq < diff {
+                continue;
             }
 
-            let freq = (target_max, target_min);
+            // println!("{}:{}", target_min, target_max);
 
-            // 7. 发送事件
+            let freq = (target_min, target_max);
+
+            // 发送事件
             let result = self.tx.send(Event::SetFreq((self.from as u8, freq)));
 
             match result {

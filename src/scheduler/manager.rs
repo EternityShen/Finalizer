@@ -1,12 +1,6 @@
-use std::{
-    sync::{Arc, Mutex, mpsc},
-    time::Duration,
-};
+use std::sync::{Arc, Mutex, mpsc};
 
-use crate::{
-    config::data,
-    cpu_handle::cpu_freq::{self, CpuFreq},
-};
+use crate::{config::data, cpu_handle::cpu_freq::CpuFreq};
 
 pub enum Event {
     Boost((u8, (u32, u32))),
@@ -38,26 +32,19 @@ impl Manager {
             if let Ok(event) = self.rx.recv() {
                 match event {
                     Event::Boost(s) => {
-                        if self
-                            .cpu_freq_handle
-                            .policys
-                            .get_mut(&s.0)
-                            .unwrap()
-                            .read_max()
-                            .unwrap()
-                            > 1200000
-                        {
-                            continue;
-                        }
+                        // println!("policy{} -> ({} {})", s.0, s.1.0, s.1.1);
                         self.cpu_freq_handle.write_index_freq(s.0, s.1).unwrap();
-                        self.cpu_freq_handle.write_index_freq(4, s.1).unwrap();
-                        self.cpu_freq_handle.write_index_freq(7, s.1).unwrap();
                     }
                     Event::SetFreq(s) => {
+                        // println!("policy{} -> ({} {})", s.0, s.1.0, s.1.1);
                         self.cpu_freq_handle.write_index_freq(s.0, s.1).unwrap();
                     }
-                    Event::SetGovernor(s) => {}
-                    Event::SetIdleGovernor(s) => {}
+                    Event::SetGovernor(s) => {
+                        self.cpu_freq_handle.write_index_governor(s.0, s.1).unwrap();
+                    }
+                    Event::SetIdleGovernor(s) => {
+                        self.cpu_freq_handle.write_idle_governor(s).unwrap();
+                    }
                 }
             }
         }
