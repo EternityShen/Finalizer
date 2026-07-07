@@ -4,7 +4,7 @@ use nix::sys::stat::Mode;
 use nix::unistd::read;
 use std::mem::size_of;
 use std::os::fd::{AsFd, OwnedFd};
-use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
 
@@ -32,6 +32,7 @@ pub struct Moniter {
     config: data::Config,
     mode: Arc<AtomicUsize>,
     cpu_freq_handle: CpuFreq,
+    is_game: Arc<AtomicBool>,
     tx: mpsc::Sender<Event>,
 }
 
@@ -42,6 +43,7 @@ impl Moniter {
         logger_handle: Arc<Mutex<logger::Logger>>,
         config: data::Config,
         mode: Arc<AtomicUsize>,
+        is_game: Arc<AtomicBool>,
     ) -> Self {
         let devices = open_devices(devices);
         let cpu_freq = CpuFreq::new(config.clone(), logger_handle.clone());
@@ -52,6 +54,7 @@ impl Moniter {
             mode,
             cpu_freq_handle: cpu_freq,
             logger_handle,
+            is_game,
         }
     }
 
@@ -111,6 +114,11 @@ impl Moniter {
         loop {
             // 只有当 touch_monitor 确实排查到了触摸事件，才执行 Boost 逻辑
             if self.touch_monitor() {
+                std::thread::sleep(Duration::from_millis(300));
+                // 游戏不boost
+                if self.is_game.load(std::sync::atomic::Ordering::Relaxed) {
+                    continue;
+                }
                 for (u, i) in self.config.policy.clone().iter().enumerate() {
                     let result = self.cpu_freq_handle.policys.get_mut(&(i.from as u8));
                     if let Some(p) = result {
@@ -227,8 +235,6 @@ impl Moniter {
                     }
                 }
             }
-            // 限制高频触发，每次消费完一轮事件后休息 200ms
-            std::thread::sleep(Duration::from_millis(200));
         }
     }
 }

@@ -27,6 +27,7 @@ pub struct CpuStat<'a> {
     policy_freq: cpu_freq::Policy,
     mode: Arc<AtomicUsize>,
     onf: Arc<AtomicBool>,
+    is_game: Arc<AtomicBool>,
     config: Mode,
 }
 
@@ -40,6 +41,7 @@ impl<'a> CpuStat<'a> {
         config: data::Config,
         mode: Arc<AtomicUsize>,
         onf: Arc<AtomicBool>,
+        is_game: Arc<AtomicBool>,
     ) -> Self {
         let num_cpus = if to >= from {
             (to - from + 1) as usize
@@ -62,6 +64,7 @@ impl<'a> CpuStat<'a> {
             policy_freq: freq_handle,
             mode,
             onf,
+            is_game,
             config: config.mode,
         }
     }
@@ -199,7 +202,9 @@ impl<'a> CpuStat<'a> {
 
             std::thread::sleep(Duration::from_millis(delay));
 
-            if !self.onf.load(std::sync::atomic::Ordering::Relaxed) {
+            if !self.onf.load(std::sync::atomic::Ordering::Relaxed)
+                || self.is_game.load(std::sync::atomic::Ordering::Relaxed)
+            {
                 continue;
             }
 

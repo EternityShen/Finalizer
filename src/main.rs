@@ -5,10 +5,10 @@ use std::sync::{
 };
 
 use finalizer::{
-    config::data,
+    config::data::{self, GameList},
     cpu_handle::cpu_stat::CpuStat,
     devices::{self, touch},
-    scheduler::{manager, mode_switch, screen_moniter},
+    scheduler::{game_moniter, manager, mode_switch, screen_moniter},
 };
 
 fn main() {
@@ -25,6 +25,9 @@ fn main() {
 
     let mode = Arc::new(AtomicUsize::new(0));
     let onf = Arc::new(AtomicBool::new(true));
+    let is_game = Arc::new(AtomicBool::new(false));
+
+    let game_list = GameList::new("/data/adb/modules/SZE_FINALIZER/config/game_list.toml");
 
     for (id, i) in config.clone().policy.into_iter().enumerate() {
         let tx_clone = tx.clone();
@@ -32,6 +35,7 @@ fn main() {
         let config_clone = config.clone();
         let mode_clone = mode.clone();
         let onf_clone = onf.clone();
+        let is_game_clone = is_game.clone();
         let _ = std::thread::Builder::new()
             .name("listen_1".to_string())
             .spawn(move || {
@@ -44,6 +48,7 @@ fn main() {
                     config_clone,
                     mode_clone,
                     onf_clone,
+                    is_game_clone,
                 );
                 stat.start_send_event_loop();
             });
@@ -57,6 +62,7 @@ fn main() {
         logger_handle.clone(),
         config.clone(),
         mode.clone(),
+        is_game.clone(),
     );
 
     let _ = std::thread::Builder::new()
@@ -91,6 +97,19 @@ fn main() {
         .name("screen_moniter".to_string())
         .spawn(move || {
             screen_moniter.start_loop();
+        });
+
+    let mut game_moniter = game_moniter::GameMoniter::new(
+        is_game.clone(),
+        onf.clone(),
+        game_list,
+        logger_handle.clone(),
+    );
+
+    let _ = std::thread::Builder::new()
+        .name("game_moniter".to_string())
+        .spawn(move || {
+            game_moniter.start_loop();
         });
 
     let mut manager = manager::Manager::new(rx, logger_handle, config);

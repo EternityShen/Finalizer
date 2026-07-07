@@ -72,3 +72,22 @@ fn test() {
 
     println!("{:?}", config);
 }
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct GameList {
+    pub listvalue: Vec<ListValue>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct ListValue {
+    pub pkg: String,
+    pub name: String,
+}
+
+#[test]
+fn testgame() {
+    let content = std::fs::read_to_string("./debug/game_list.toml").unwrap();
+    let config: GameList = toml::from_str(&content).unwrap();
+
+    println!("{:?}", config);
+}
