@@ -77,6 +77,7 @@ fn main() {
         tx.clone(),
         config.clone(),
         logger_handle.clone(),
+        is_game.clone(),
     );
 
     let _ = std::thread::Builder::new()
@@ -104,6 +105,8 @@ fn main() {
         onf.clone(),
         game_list,
         logger_handle.clone(),
+        tx.clone(),
+        config.clone(),
     );
 
     let _ = std::thread::Builder::new()
