@@ -56,6 +56,8 @@ impl GameMoniter {
                 if let Ok(mut log) = self.logger_handle.lock()
                     && self.is_game.load(std::sync::atomic::Ordering::Relaxed)
                 {
+                    self.is_game
+                        .store(false, std::sync::atomic::Ordering::Relaxed);
                     log.info("退出白名单应用调度开启".to_string());
                 }
             }
