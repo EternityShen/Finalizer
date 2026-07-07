@@ -13,7 +13,7 @@ use crate::{
 
 pub struct CpuFreq {
     pub policys: HashMap<u8, Policy>,
-    idle_governor: File,
+    idle_governor: Option<String>,
     logger_handle: Arc<Mutex<logger::Logger>>,
 }
 
@@ -24,8 +24,8 @@ impl CpuFreq {
             0o666,
         );
 
-        match result {
-            Ok(_) => {}
+        let have_idle = match result {
+            Ok(_) => true,
             Err(e) => {
                 if let Ok(mut log) = logger_handle.lock() {
                     log.error(format!(
@@ -33,25 +33,14 @@ impl CpuFreq {
                         e
                     ));
                 }
-                panic!()
+                false
             }
-        }
+        };
 
-        let result = OpenOptions::new()
-            .write(true)
-            .open("/sys/devices/system/cpu/cpuidle/current_governor");
-
-        let idle_governor = match result {
-            Ok(f) => f,
-            Err(e) => {
-                if let Ok(mut log) = logger_handle.lock() {
-                    log.error(format!(
-                        "无法打开文件:/sys/devices/system/cpu/cpuidle/current_governor 错误:{}",
-                        e
-                    ));
-                }
-                panic!()
-            }
+        let idle_governor = if have_idle {
+            Some("/sys/devices/system/cpu/cpuidle/current_governor".to_string())
+        } else {
+            None
         };
 
         let mut lines = Vec::new();
@@ -106,8 +95,12 @@ impl CpuFreq {
     }
 
     pub fn write_idle_governor(&mut self, value: String) -> Result<(), io::Error> {
-        self.idle_governor.write_all(value.as_bytes())?;
-        self.idle_governor.flush()?;
+        if let Some(s) = self.idle_governor.clone() {
+            OpenOptions::new()
+                .write(true)
+                .open(s)?
+                .write_all(value.as_bytes())?;
+        }
         Ok(())
     }
 }
