@@ -60,3 +60,8 @@ Finalizer 是一个用 Rust 编写的轻量守护进程/工具，面向 Android 
 示例中不同模式的 `delay` 值依次为：`power`=600，其他模式可设更小值以获得更快响应。
 有关完整示例，请参阅仓库内的 `debug/config_bak.toml` 示例配置。
 
+游戏列表配置
+- `listvalue` 列表元素
+    - `pkg` 应用包名
+    - `name` 软件名 (可以随便写)
+
