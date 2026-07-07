@@ -12,6 +12,7 @@ pub enum Event {
 pub struct Manager {
     rx: mpsc::Receiver<Event>,
     cpu_freq_handle: CpuFreq,
+    logger_handle: Arc<Mutex<logger::Logger>>,
 }
 
 impl Manager {
@@ -20,10 +21,11 @@ impl Manager {
         logger_handle: Arc<Mutex<logger::Logger>>,
         config: data::Config,
     ) -> Self {
-        let cpu_freq_handle = CpuFreq::new(config, logger_handle);
+        let cpu_freq_handle = CpuFreq::new(config, logger_handle.clone());
         Self {
             rx,
             cpu_freq_handle,
+            logger_handle,
         }
     }
 
@@ -33,17 +35,49 @@ impl Manager {
                 match event {
                     Event::Boost(s) => {
                         // println!("policy{} -> ({} {})", s.0, s.1.0, s.1.1);
-                        self.cpu_freq_handle.write_index_freq(s.0, s.1).unwrap();
+                        let result = self.cpu_freq_handle.write_index_freq(s.0, s.1);
+                        match result {
+                            Ok(_) => {}
+                            Err(e) => {
+                                if let Ok(mut log) = self.logger_handle.lock() {
+                                    log.warn(format!("设置:Policy{} Boost 错误:{}", s.0, e));
+                                }
+                            }
+                        }
                     }
                     Event::SetFreq(s) => {
                         // println!("policy{} -> ({} {})", s.0, s.1.0, s.1.1);
-                        self.cpu_freq_handle.write_index_freq(s.0, s.1).unwrap();
+                        let result = self.cpu_freq_handle.write_index_freq(s.0, s.1);
+                        match result {
+                            Ok(_) => {}
+                            Err(e) => {
+                                if let Ok(mut log) = self.logger_handle.lock() {
+                                    log.warn(format!("设置:Policy{} 频率失败 错误:{}", s.0, e));
+                                }
+                            }
+                        }
                     }
                     Event::SetGovernor(s) => {
-                        self.cpu_freq_handle.write_index_governor(s.0, s.1).unwrap();
+                        let result = self.cpu_freq_handle.write_index_governor(s.0, s.1);
+                        match result {
+                            Ok(_) => {}
+                            Err(e) => {
+                                if let Ok(mut log) = self.logger_handle.lock() {
+                                    log.warn(format!("设置:Policy{} 调速器失败 错误:{}", s.0, e));
+                                }
+                            }
+                        }
                     }
                     Event::SetIdleGovernor(s) => {
-                        self.cpu_freq_handle.write_idle_governor(s).unwrap();
+                        let result = self.cpu_freq_handle.write_idle_governor(s);
+                        match result {
+                            Ok(_) => {}
+                            Err(e) => {
+                                if let Ok(mut log) = self.logger_handle.lock() {
+                                    log.warn(format!("设置idle调速器失败 错误{}", e));
+                                }
+                            }
+                        }
                     }
                 }
             }
