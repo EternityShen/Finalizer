@@ -1,4 +1,7 @@
-use std::sync::{Arc, Mutex, atomic::AtomicBool};
+use std::{
+    sync::{Arc, Mutex, atomic::AtomicBool},
+    time::Duration,
+};
 
 use crate::{config::data, utils};
 
@@ -27,6 +30,7 @@ impl GameMoniter {
 
     pub fn start_loop(&mut self) {
         loop {
+            std::thread::sleep(Duration::from_secs(5));
             if self.onf.load(std::sync::atomic::Ordering::Relaxed) {
                 continue;
             }
