@@ -63,12 +63,6 @@ pub fn get_now_top_window_pkg_name() -> String {
         .arg("dumpsys window | grep -E 'mCurrentFocus=Window'")
         .output()
         .expect("Failed to execute command");
-    let output = String::from_utf8_lossy(&result.stdout).to_string();
-    let opt_vec: Vec<&str> = output.split_whitespace().collect();
-    let name_end = opt_vec[2].find("/");
-    let mut opt = String::new();
-    if let Some(u) = name_end {
-        opt = opt_vec[2][..u].to_string()
-    }
-    opt
+
+    String::from_utf8_lossy(&result.stdout).to_string()
 }

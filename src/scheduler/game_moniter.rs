@@ -43,7 +43,7 @@ impl GameMoniter {
             let current_pkg = utils::get_now_top_window_pkg_name();
 
             for line in self.game_list.listvalue.clone() {
-                if current_pkg.trim() == line.pkg.trim() {
+                if current_pkg.contains(line.pkg.trim()) {
                     if self.is_game.load(std::sync::atomic::Ordering::Relaxed) {
                         break;
                     } else {
@@ -77,7 +77,6 @@ impl GameMoniter {
                             }
                         }
                     }
-                    break;
                 }
                 if let Ok(mut log) = self.logger_handle.lock()
                     && self.is_game.load(std::sync::atomic::Ordering::Relaxed)
