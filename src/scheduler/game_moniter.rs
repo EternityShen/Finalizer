@@ -42,10 +42,10 @@ impl GameMoniter {
 
             let current_pkg = utils::get_now_top_window_pkg_name();
 
-            for line in self.game_list.listvalue.clone() {
+            'a: for line in self.game_list.listvalue.clone() {
                 if current_pkg.contains(line.pkg.trim()) {
                     if self.is_game.load(std::sync::atomic::Ordering::Relaxed) {
-                        break;
+                        break 'a;
                     } else {
                         self.is_game
                             .store(true, std::sync::atomic::Ordering::Relaxed);
